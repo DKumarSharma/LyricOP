@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LyricsOP - Find Your Favorite Song Lyrics</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        :root {
+            --dark-blue: #0c1829;
+            --medium-blue: #172641ce;
+            --light-blue: #0d6efd;
+            --text-primary: #e6f1ff;
+            --text-secondary: #8892b0;
+        }
+
+        body {
+            background-color: var(--dark-blue);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Parallax Grid Background */
+        .parallax-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.2;
+            background: 
+                linear-gradient(#42a7eb 1px, transparent 1px),
+                linear-gradient(90deg, #42a7eb 1px, transparent 1px);
+            background-size: 50px 50px;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        .grid-square {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-color: var(--light-blue);
+            opacity: 0.1;
+            animation: float 15s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        /* Header Styles */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 5%;
+            background-color: rgba(10, 25, 47, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(245, 245, 245, 0.178);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--light-blue);
+            text-shadow: 1px 1px 0px rgb(96, 210, 238);
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background-color: var(--medium-blue);
+            color: var(--text-primary);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background-color: var(--light-blue);
+        }
+
+        /* Search Section */
+        .search-section {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 50vh;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .search-container {
+            width: 100%;
+            max-width: 600px;
+            position: relative;
+            margin-top: 30px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px 20px 15px 50px;
+            border-radius: 50px;
+            border: 1px solid rgba(37, 179, 167, 0.548);
+            background-color: var(--medium-blue);
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--light-blue);
+            box-shadow: 0 0 15px rgba(100, 255, 218, 0.3);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        /* Results Section */
+        .results-section {
+            padding: 20px 5%;
+        }
+
+        .section-title {
+            margin-bottom: 30px;
+            font-size: 1.8rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background-color: var(--light-blue);
+        }
+
+        .songs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .song-card {
+            background-color: var(--medium-blue);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0px 0px 0px 1px rgba(174, 207, 245, 0.39);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: fadeIn 0.5s ease-out;
+            animation-fill-mode: both;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .song-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0px 0px 0px 5px rgba(131, 183, 243, 0.733);
+        }
+
+        .song-info {
+            padding: 20px;
+        }
+
+        .song-title {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            color: var(--light-blue);
+        }
+
+        .song-artist, .song-movie {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .view-lyrics-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: var(--dark-blue);
+            color: var(--text-primary);
+            border: none;
+            border-radius: 0 0 10px 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            text-align: center;
+        }
+
+        .view-lyrics-btn:hover {
+            background-color: var(--light-blue);
+        }
+
+        .load-more-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .load-more-btn {
+            padding: 12px 30px;
+            background-color: transparent;
+            color: var(--light-blue);
+            border: 1px solid var(--light-blue);
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .load-more-btn:hover {
+            background-color: rgba(100, 255, 218, 0.1);
+        }
+
+        /* Lyrics Modal */
+        .lyrics-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--dark-blue);
+            z-index: 1000;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            overflow-y: auto;
+        }
+
+        .lyrics-modal.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 5%;
+            background-color: rgba(10, 25, 47, 0.9);
+            position: sticky;
+            top: 0;
+            z-index: 101;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            color: var(--light-blue);
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.8rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-modal:hover {
+            color: var(--light-blue);
+        }
+
+        .lyrics-content {
+            padding: 40px 5%;
+            white-space: pre-line;
+            line-height: 1.6;
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Loading Spinner */
+        .loader {
+            display: none;
+            border: 5px solid var(--medium-blue);
+            border-top: 5px solid var(--light-blue);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 40px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--dark-blue);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--medium-blue);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--light-blue);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 30px 5%;
+            margin-top: 50px;
+            color: var(--text-secondary);
+            border-top: 2px solid rgba(222, 227, 243, 0.486);
+        }
+
+        .made-with-love {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 1.5rem;
+            }
+            
+            .search-input {
+                padding: 12px 15px 12px 45px;
+                font-size: 1rem;
+            }
+            
+            .songs-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+            
+            .section-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header {
+                padding: 15px;
+            }
+            
+            .logo {
+                font-size: 1.3rem;
+            }
+            
+            .search-section {
+                padding: 30px 15px;
+            }
+            
+            .search-container {
+                margin-top: 20px;
+            }
+            
+            .results-section {
+                padding: 20px 15px;
+            }
+            
+            .songs-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Parallax Grid Background -->
+    <div class="parallax-grid">
+        <div class="grid-square" style="top: 10%; left: 5%; animation-delay: 0s;"></div>
+        <div class="grid-square" style="top: 30%; left: 80%; animation-delay: 2s;"></div>
+        <div class="grid-square" style="top: 60%; left: 40%; animation-delay: 4s;"></div>
+        <div class="grid-square" style="top: 75%; left: 15%; animation-delay: 1s;"></div>
+        <div class="grid-square" style="top: 20%; left: 50%; animation-delay: 3s;"></div>
+    </div>
+
+    <!-- Header -->
+    <header>
+        <div class="logo">
+            <span class="material-icons">music_note</span>
+            <span>LyricsOP</span>
+        </div>
+        <a href="index.html" class="back-btn">
+            <span class="material-icons">arrow_back</span>
+            Back to Home
+        </a>
+    </header>
+
+    <!-- Search Section -->
+    <section class="search-section">
+        <h1>Find Your Favorite Song Lyrics</h1>
+        <p>Search by song title, artist, movie, or lyrics</p>
+        
+        <div class="search-container">
+            <span class="material-icons search-icon">search</span>
+            <input type="text" class="search-input" placeholder="Start typing to search..." id="searchInput">
+        </div>
+    </section>
+
+    <!-- Results Section -->
+    <section class="results-section">
+        <h2 class="section-title">Popular Songs</h2>
+        
+        <div class="loader" id="loader"></div>
+        
+        <div class="songs-grid" id="songsGrid">
+            <!-- Songs will be populated by JavaScript -->
+        </div>
+        
+        <div class="load-more-container">
+            <button class="load-more-btn" id="loadMoreBtn">Load More</button>
+        </div>
+    </section>
+
+    <!-- Lyrics Modal -->
+    <div class="lyrics-modal" id="lyricsModal">
+        <div class="modal-header">
+            <h3 class="modal-title" id="modalSongTitle">Song Title</h3>
+            <button class="close-modal" id="closeModal">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        <div class="lyrics-content" id="lyricsContent">
+            <!-- Lyrics will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2023 LyricsOP - All rights reserved</p>
+        <div class="made-with-love">
+            <span>Made with</span>
+            <span class="material-icons" style="color: #ff5252;">favorite</span>
+            <span>by Dheer Kumar Sharma</span>
+        </div>
+    </footer>
+
+    <script>
+        // DOM Elements
+        const songsGrid = document.getElementById('songsGrid');
+        const searchInput = document.getElementById('searchInput');
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        const lyricsModal = document.getElementById('lyricsModal');
+        const modalSongTitle = document.getElementById('modalSongTitle');
+        const lyricsContent = document.getElementById('lyricsContent');
+        const closeModal = document.getElementById('closeModal');
+        const loader = document.getElementById('loader');
+
+        // Variables
+        let displayedSongs = 4;
+        const songsPerLoad = 2;
+        let songsData = [];
+
+        // Initialize the page
+        function init() {
+            loadSongsData();
+            setupEventListeners();
+        }
+
+        // Load songs data from JSON file
+        // Replace the loadSongsData function with this:
+async function loadSongsData() {
+    try {
+        loader.style.display = 'block';
+        songsGrid.innerHTML = '';
+        
+        // Fetch from external JSON file
+        const response = await fetch('data.json');
+        songsData = await response.json();
+        
+        renderSongs(songsData.slice(0, displayedSongs));
+        loader.style.display = 'none';
+    } catch (error) {
+        console.error('Error loading songs data:', error);
+        loader.style.display = 'none';
+        songsGrid.innerHTML = '<p class="error-message">Failed to load songs. Please try again later.</p>';
+    }
+}
+
+        // Render songs to the grid
+        function renderSongs(songs) {
+            songs.forEach(song => {
+                const songCard = document.createElement('div');
+                songCard.className = 'song-card';
+                songCard.style.animationDelay = `${Math.random() * 0.5}s`;
+                
+                songCard.innerHTML = `
+                    <div class="song-info">
+                        <h3 class="song-title">${song.title}</h3>
+                        <p class="song-artist">${song.artist}</p>
+                        <p class="song-movie">From: ${song.movie}</p>
+                    </div>
+                    <button class="view-lyrics-btn" data-id="${song.id}">View Lyrics</button>
+                `;
+                
+                songsGrid.appendChild(songCard);
+            });
+
+            // Add event listeners to view lyrics buttons
+            document.querySelectorAll('.view-lyrics-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const songId = parseInt(e.target.getAttribute('data-id'));
+                    showLyrics(songId);
+                });
+            });
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Search functionality
+            searchInput.addEventListener('input', handleSearch);
+            
+            // Load more functionality
+            loadMoreBtn.addEventListener('click', loadMoreSongs);
+            
+            // Close modal functionality
+            closeModal.addEventListener('click', () => {
+                lyricsModal.classList.remove('active');
+            });
+            
+            // Close modal when clicking outside content
+            lyricsModal.addEventListener('click', (e) => {
+                if (e.target === lyricsModal) {
+                    lyricsModal.classList.remove('active');
+                }
+            });
+        }
+
+        // Handle search input
+        function handleSearch() {
+            const searchTerm = searchInput.value.toLowerCase();
+            
+            if (searchTerm.length === 0) {
+                clearSongsGrid();
+                renderSongs(songsData.slice(0, displayedSongs));
+                loadMoreBtn.style.display = 'block';
+                return;
+            }
+            
+            const filteredSongs = songsData.filter(song => 
+                song.title.toLowerCase().includes(searchTerm) ||
+                song.artist.toLowerCase().includes(searchTerm) ||
+                song.movie.toLowerCase().includes(searchTerm) ||
+                song.lyrics.toLowerCase().includes(searchTerm)
+            );
+            
+            clearSongsGrid();
+            renderSongs(filteredSongs);
+            loadMoreBtn.style.display = 'none';
+        }
+
+        // Load more songs
+        function loadMoreSongs() {
+            const nextSongs = songsData.slice(displayedSongs, displayedSongs + songsPerLoad);
+            renderSongs(nextSongs);
+            displayedSongs += nextSongs.length;
+            
+            if (displayedSongs >= songsData.length) {
+                loadMoreBtn.style.display = 'none';
+            }
+        }
+
+        // Show lyrics in modal
+        function showLyrics(songId) {
+            const song = songsData.find(s => s.id === songId);
+            
+            if (song) {
+                modalSongTitle.textContent = song.title;
+                lyricsContent.textContent = song.lyrics;
+                lyricsModal.classList.add('active');
+            }
+        }
+
+        // Clear songs grid
+        function clearSongsGrid() {
+            while (songsGrid.firstChild) {
+                songsGrid.removeChild(songsGrid.firstChild);
+            }
+        }
+
+        // Initialize the application
+        init();
+    </script>
+</body>
+</html>
